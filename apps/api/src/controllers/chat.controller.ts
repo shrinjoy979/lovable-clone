@@ -3,9 +3,8 @@ import type { Request, Response } from "express";
 import { chatSchema } from "../validations/chat.validation.js";
 import { z } from "zod";
 
-
 class ChatController {
-    chat(req: Request, res: Response) {
+    async chat(req: Request, res: Response) {
         const result = chatSchema.safeParse(req.body);
 
         if (!result.success) {
@@ -14,11 +13,14 @@ class ChatController {
             });
         }
 
-        const response = chatService.generateResponse(result.data.message);
-
-        res.json({
-            response,
-        });
+        try {
+            const response = await chatService.generateResponse(result.data.message);
+            return res.json({ response });
+        } catch (error) {
+            return res.status(500).json({
+                error: "Failed to generate response"
+            });
+        }
     }
 }
 
