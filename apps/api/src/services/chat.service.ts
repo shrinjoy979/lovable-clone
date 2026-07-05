@@ -1,6 +1,8 @@
+import openAIProvider from "../providers/openai.provider.js";
+
 class ChatService {
-    generateResponse(message: string) {
-        return `You said ${message}`;
+    async generateResponse(message: string) {
+        return await openAIProvider.generate(message);
     }
 }
 
