@@ -1,20 +1,22 @@
 import OpenAI from "openai";
+import type { AIProvider } from "./ai-provider.interface.js";
 
-class OpenAIProvider {
-  private getClient() {
-    console.log("Key", process.env.OPENAI_API_KEY);
-    return new OpenAI({
+class OpenAIProvider implements AIProvider {
+  private client: OpenAI;
+
+  constructor() {
+    this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
   }
 
-  async generate(prompt: string) {
-    const client = this.getClient();
-
-    return await client.responses.create({
+  async generate(prompt: string): Promise<string> {
+    const response = await this.client.responses.create({
       model: "gpt-5.5",
       input: prompt,
     });
+
+    return response.output_text;
   }
 }
 
