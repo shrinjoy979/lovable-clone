@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AIProvider } from "./ai-provider.interface.js";
 
-class GeminiProvider implements AIProvider {
+export class GeminiProvider implements AIProvider {
   private client = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY!,
   });
@@ -15,5 +15,3 @@ class GeminiProvider implements AIProvider {
     return response.text ?? "";
   }
 }
-
-export default new GeminiProvider();
