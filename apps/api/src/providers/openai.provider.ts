@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { AIProvider } from "./ai-provider.interface.js";
 
-class OpenAIProvider implements AIProvider {
+export class OpenAIProvider implements AIProvider {
   private client: OpenAI;
 
   constructor() {
@@ -19,5 +19,3 @@ class OpenAIProvider implements AIProvider {
     return response.output_text;
   }
 }
-
-export default new OpenAIProvider();
