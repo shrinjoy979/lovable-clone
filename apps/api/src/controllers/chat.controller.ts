@@ -1,6 +1,7 @@
 import chatService from "../services/chat.service.js";
 import type { Request, Response } from "express";
 import { chatSchema } from "../validations/chat.validation.js";
+import type { ChatRequest } from "@repo/shared/chat";
 import { z } from "zod";
 
 class ChatController {
@@ -14,7 +15,8 @@ class ChatController {
         }
 
         try {
-            const response = await chatService.generateResponse(result.data.message);
+            const body = result.data as ChatRequest;
+            const response = await chatService.generateResponse(body.messages);
             return res.json({ response });
         } catch (error) {
             return res.status(500).json({
