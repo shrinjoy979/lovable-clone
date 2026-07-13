@@ -8,4 +8,13 @@ export const chatSchema = z.object({
         .max(5000, "Message is too long")
 });
 
+export const chatSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant", "system"]),
+      content: z.string().min(1),
+    })
+  ),
+});
+
 export type ChatRequest = z.infer<typeof chatSchema>
