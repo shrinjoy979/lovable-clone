@@ -1,12 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AIProvider } from "./ai-provider.interface.js";
+import type { Message } from "@repo/shared/chat";
 
 export class GeminiProvider implements AIProvider {
   private client = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY!,
   });
 
-  async generate(prompt: string): Promise<string> {
+  async generate(messages: Message[]): Promise<string> {
+    const prompt = messages
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n");
+
+
     const response = await this.client.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,

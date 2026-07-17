@@ -23,6 +23,9 @@ importers:
       '@google/genai':
         specifier: ^2.10.0
         version: 2.10.0
+      '@repo/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
       cors:
         specifier: ^2.8.6
         version: 2.8.6
@@ -124,6 +127,8 @@ importers:
       typescript-eslint:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
+
+  packages/shared: {}
 
   packages/typescript-config: {}
 
