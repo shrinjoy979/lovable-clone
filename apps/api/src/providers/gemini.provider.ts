@@ -7,11 +7,16 @@ export class GeminiProvider implements AIProvider {
     apiKey: process.env.GEMINI_API_KEY!,
   });
 
-  async generate(messages: Message[]): Promise<string> {
+  private mapMessages(messages: Message[]): string {
     const prompt = messages
       .map((m) => `${m.role}: ${m.content}`)
       .join("\n");
 
+      return prompt;
+  }
+
+  async generate(messages: Message[]): Promise<string> {
+    const prompt = this.mapMessages(messages);
 
     const response = await this.client.models.generateContent({
       model: "gemini-2.5-flash",
