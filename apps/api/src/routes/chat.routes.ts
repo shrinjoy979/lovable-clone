@@ -5,4 +5,6 @@ const router = Router();
 
 router.post("/", chatController.chat);
 
+router.post("/stream", chatController.chat)
+
 export default router;
