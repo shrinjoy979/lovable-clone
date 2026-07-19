@@ -25,4 +25,23 @@ export class GeminiProvider implements AIProvider {
 
     return response.text ?? "";
   }
+
+  async *generateStream(messages: Message[]): AsyncGenerator<string> {
+    const prompt = this.mapMessages(messages);
+
+    try {
+      const stream = await this.client.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+  
+      for await (const chunk of stream) {
+        if(chunk.text?.trim()) {
+          yield chunk.text
+        }
+      }
+    }catch(e) {
+      throw new Error("Failed to stream response from gemini");
+    }
+  }
 }
