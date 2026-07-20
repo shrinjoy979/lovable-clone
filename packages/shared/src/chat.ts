@@ -10,3 +10,8 @@ export interface ChatRequest {
 export interface ChatResponse {
   response: string;
 }
+
+export interface GenerateOptions {
+  messages: Message[];
+  signal?: AbortSignal;
+}
