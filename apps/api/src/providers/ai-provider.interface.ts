@@ -1,7 +1,7 @@
-import type { Message } from "@repo/shared/chat";
+import type { GenerateOptions } from "@repo/shared/chat";
 
 export interface AIProvider {
-  generate(messages: Message[]): Promise<string>;
+  generate(options: GenerateOptions): Promise<string>;
 
-  generateStream(messages: Message[]): AsyncGenerator<string>;
+  generateStream(options: GenerateOptions): AsyncGenerator<string>;
 }

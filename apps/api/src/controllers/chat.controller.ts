@@ -15,10 +15,9 @@ class ChatController {
         }
 
         try {
-            const body = result.data as ChatRequest;
-            const response = await chatService.generateResponse(body.messages);
+            const response = await chatService.generateResponse(result.data);
             return res.json({ response });
-        } catch (error) {
+        } catch (_error) {
             return res.status(500).json({
                 error: "Failed to generate response"
             });
