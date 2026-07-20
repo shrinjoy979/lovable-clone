@@ -1,11 +1,11 @@
-import type { Message } from "@repo/shared/chat";
+import type { GenerateOptions, Message } from "@repo/shared/chat";
 import { getProvider } from "../providers/provider.factory.js";
 
 class ChatService {
-  async generateResponse(messages: Message[]): Promise<string> {
+  async generateResponse(options: GenerateOptions): Promise<string> {
     const provider = getProvider();
 
-    return provider.generate(messages);
+    return provider.generate(options);
   }
 }
 

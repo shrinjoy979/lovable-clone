@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AIProvider } from "./ai-provider.interface.js";
-import type { Message } from "@repo/shared/chat";
+import type { GenerateOptions, Message } from "@repo/shared/chat";
 
 export class GeminiProvider implements AIProvider {
   private client = new GoogleGenAI({
@@ -15,24 +15,27 @@ export class GeminiProvider implements AIProvider {
       return prompt;
   }
 
-  async generate(messages: Message[]): Promise<string> {
+  async generate(options: GenerateOptions): Promise<string> {
+    const { messages } = options;
     const prompt = this.mapMessages(messages);
 
     const response = await this.client.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt,
+      contents: prompt
     });
 
     return response.text ?? "";
   }
 
-  async *generateStream(messages: Message[]): AsyncGenerator<string> {
+  async *generateStream(options: GenerateOptions): AsyncGenerator<string> {
+    const { messages, signal } = options;
     const prompt = this.mapMessages(messages);
 
     try {
       const stream = await this.client.models.generateContentStream({
         model: "gemini-2.5-flash",
         contents: prompt,
+        ...(signal ? {config: {abortSignal: signal}} : {}),
       });
   
       for await (const chunk of stream) {
