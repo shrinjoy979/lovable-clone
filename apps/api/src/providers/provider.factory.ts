@@ -5,10 +5,11 @@ import { OpenAIProvider } from "./openai.provider.js";
 export function getProvider(): AIProvider {
   switch (process.env.AI_PROVIDER) {
     case "openai":
-      return new OpenAIProvider();
-
+      const openai = new OpenAIProvider();
+      return openai;
     case "gemini":
     default:
-      return new GeminiProvider();
+      const gemini = new GeminiProvider();
+      return gemini;
   }
 }

@@ -43,8 +43,8 @@ export class GeminiProvider implements AIProvider {
           yield chunk.text
         }
       }
-    }catch(e) {
-      throw new Error("Failed to stream response from gemini");
+    }catch(error) {
+      throw new Error("Failed to stream response from gemini", { cause: error });
     }
   }
 }
