@@ -1,160 +1,357 @@
-# Turborepo starter
+# AI Chat Backend
 
-This Turborepo starter is maintained by the Turborepo core team.
+A production-style AI chat backend built with **Node.js**, **Express**, **TypeScript**, and a clean layered architecture. The project supports multiple AI providers through a provider abstraction and includes real-time streaming responses using **Server-Sent Events (SSE)**.
 
-## Using this example
+## Features
 
-Run the following command:
+* 🚀 TypeScript + Express
+* 🤖 Multiple AI providers (Gemini & OpenAI)
+* 🏗️ Provider Pattern & Factory Pattern
+* 📦 Shared request/response types
+* ✅ Request validation using Zod
+* 🌊 Real-time streaming responses with Server-Sent Events (SSE)
+* ⛔ Request cancellation using `AbortController`
+* 🧩 Clean layered architecture
+* 🔄 Easy to extend with additional AI providers
 
-```sh
-npx create-turbo@latest
+---
+
+# Tech Stack
+
+* Node.js
+* Express
+* TypeScript
+* Zod
+* Google Gemini API
+* OpenAI API
+* Server-Sent Events (SSE)
+
+---
+
+# Project Structure
+
+```text
+src
+├── app.ts
+├── index.ts
+├── config
+├── controllers
+│   └── chat.controller.ts
+├── middleware
+├── providers
+│   ├── ai-provider.interface.ts
+│   ├── gemini.provider.ts
+│   ├── openai.provider.ts
+│   └── provider.factory.ts
+├── routes
+│   └── chat.routes.ts
+├── services
+│   └── chat.service.ts
+├── validations
+│   └── chat.validation.ts
+└── types
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+# Architecture
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```text
+               HTTP Request
+                     │
+                     ▼
+               Express Router
+                     │
+                     ▼
+               Chat Controller
+                     │
+                     ▼
+                Chat Service
+                     │
+                     ▼
+              Provider Factory
+                     │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+   Gemini Provider      OpenAI Provider
+          │                     │
+          └──────────┬──────────┘
+                     ▼
+                AI Provider API
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+# Streaming Architecture
+
+```text
+Browser
+    │
+fetch("/chat/stream")
+    │
+    ▼
+Express Controller
+    │
+    ▼
+Chat Service
+    │
+    ▼
+Gemini/OpenAI Provider
+    │
+    ▼
+AsyncGenerator<string>
+    │
+    ▼
+Server-Sent Events (SSE)
+    │
+    ▼
+Browser receives chunks in real time
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+# Design Patterns Used
 
-```sh
-turbo build --filter=docs
+## Provider Pattern
+
+Each AI model implements the same interface.
+
+```ts
+interface AIProvider {
+    generate(options: GenerateOptions): Promise<string>;
+
+    generateStream(
+        options: GenerateOptions
+    ): AsyncGenerator<string>;
+}
 ```
 
-Without global `turbo`:
+Supported providers:
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+* Gemini
+* OpenAI
+
+Adding a new provider only requires implementing the interface.
+
+---
+
+## Factory Pattern
+
+The provider is selected at runtime using an environment variable.
+
+```text
+AI_PROVIDER=gemini
 ```
 
-### Develop
+or
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```text
+AI_PROVIDER=openai
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+## Layered Architecture
+
+```text
+Route
+    ↓
+Controller
+    ↓
+Service
+    ↓
+Provider
+    ↓
+AI SDK
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Each layer has a single responsibility.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Routes
 
-```sh
-turbo dev --filter=web
+* Define API endpoints.
+
+### Controllers
+
+* Handle HTTP requests and responses.
+* Validate input.
+* Stream SSE responses.
+
+### Services
+
+* Coordinate business logic.
+* Delegate AI generation to the selected provider.
+
+### Providers
+
+* Communicate with external AI SDKs.
+* Convert application messages into provider-specific formats.
+* Support both standard and streaming responses.
+
+---
+
+# API Endpoints
+
+## Generate Response
+
+```http
+POST /chat
 ```
 
-Without global `turbo`:
+### Request
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain React Hooks."
+    }
+  ]
+}
 ```
 
-### Remote Caching
+### Response
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```json
+{
+  "response": "React Hooks are..."
+}
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+## Stream Response
+
+```http
+POST /chat/stream
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Response uses **Server-Sent Events (SSE)**.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Example stream:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+```text
+data: React
 
-```sh
-turbo link
+data: Hooks
+
+data: allow...
+
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+# Validation
+
+All requests are validated using **Zod** before reaching the service layer.
+
+Rules include:
+
+* At least one message is required
+* Supported roles:
+
+  * user
+  * assistant
+  * system
+* Content cannot be empty
+* Maximum content length: 5000 characters
+
+---
+
+# Streaming
+
+Streaming responses are implemented using:
+
+* AsyncGenerator
+* Server-Sent Events (SSE)
+* AbortController
+* Readable Streams
+
+If the client disconnects:
+
+1. Express detects the connection close.
+2. `AbortController` aborts the request.
+3. The AI provider stops generating tokens.
+4. Resources are cleaned up automatically.
+
+---
+
+# Environment Variables
+
+Create a `.env` file.
+
+```env
+PORT=3001
+
+AI_PROVIDER=gemini
+
+GEMINI_API_KEY=your_gemini_api_key
+
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+# Run Locally
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
-# lovable-clone
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The server will start on:
+
+```text
+http://localhost:3001
+```
+
+---
+
+# Future Improvements
+
+* Conversation persistence
+* Authentication
+* Rate limiting
+* Request logging
+* Metrics & monitoring
+* Unit tests
+* Docker support
+* Redis caching
+* Conversation memory
+* Model configuration per request
+* Tool calling / Function calling
+* Image generation support
+* File uploads
+
+---
+
+# Learning Objectives
+
+This project demonstrates practical implementation of:
+
+* Express.js
+* TypeScript
+* Clean Architecture
+* Layered Architecture
+* Provider Pattern
+* Factory Pattern
+* AsyncGenerator
+* Server-Sent Events (SSE)
+* AbortController
+* Streaming APIs
+* Zod Validation
+* AI SDK Integration
+
+---
+
+# License
+
+This project is intended for educational purposes and experimentation with modern AI application architecture.
