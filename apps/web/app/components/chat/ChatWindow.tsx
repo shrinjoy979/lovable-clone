@@ -7,22 +7,46 @@ import type { Message } from "@repo/shared/chat";
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 
+import chatService from "@/services/chat.service";
+
 export default function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! How can I help you today?",
+      content: "Hello! How can I help you today!",
     },
   ]);
 
-  function handleSend(content: string) {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content,
-      },
-    ]);
+  async function handleSend(content: string) {
+    const userMessage: Message = {
+      role: "user",
+      content,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const response = await chatService.generateResponse({
+        messages: [...messages, userMessage],
+      });
+
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: response,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error(error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong.",
+        },
+      ]);
+    }
   }
 
   return (
