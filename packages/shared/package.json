@@ -4,6 +4,7 @@
   "type": "module",
   "main": "./src/chat.ts",
   "exports": {
+    ".": "./src/index.ts",
     "./chat": "./src/chat.ts"
   }
 }
