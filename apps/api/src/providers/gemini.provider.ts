@@ -1,10 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AIProvider } from "./ai-provider.interface.js";
 import type { GenerateOptions, Message } from "@repo/shared/chat";
+import { env } from "../config/index.js";
 
 export class GeminiProvider implements AIProvider {
   private client = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY!,
+    apiKey: env.GEMINI_API_KEY!,
   });
 
   private mapMessages(messages: Message[]): string {
