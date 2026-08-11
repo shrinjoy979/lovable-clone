@@ -7,7 +7,7 @@ import type { Message } from "@repo/shared/chat";
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 
-import chatService from "@/services/chat.service";
+import chatService from "services/chat.service";
 
 export default function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([
