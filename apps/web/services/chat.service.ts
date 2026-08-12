@@ -1,22 +1,47 @@
 import type { GenerateOptions } from "@repo/shared/chat";
 
 class ChatService {
-  async generateResponse(options: GenerateOptions): Promise<string> {
-    const response = await fetch( `${process.env.NEXT_PUBLIC_API_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(options),
-    });
+  async *generateStream(
+    options: GenerateOptions
+  ): AsyncGenerator<string> {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/chat/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(options),
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error("Failed to generate response");
+    if (!response.ok || !response.body) {
+      throw new Error("Failed to start stream");
     }
 
-    const data = await response.json();
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
-    return data.response;
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, {
+        stream: true,
+      });
+
+      const events = buffer.split("\n\n");
+      buffer = events.pop() ?? "";
+
+      for (const event of events) {
+        if (!event.startsWith("data: ")) continue;
+
+        yield event.slice(6);
+      }
+    }
   }
 }
 
