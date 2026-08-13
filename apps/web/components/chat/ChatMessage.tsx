@@ -4,31 +4,51 @@ import CodeBlock from "./CodeBlock";
 
 interface ChatMessageProps {
   message: Message;
+  isStreaming?: boolean;
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({
+  message,
+  isStreaming = false,
+}: ChatMessageProps) {
   const isUser = message.role === "user";
+  const showTyping = isStreaming && !message.content.trim();
 
   return (
-    <div
-      className={`mb-4 flex ${isUser ? "justify-end" : "justify-start"}`}
-    >
-      <div
-        className={`max-w-[80%] rounded-lg px-4 py-3 ${
-          isUser ? "bg-black text-white" : "bg-gray-100 text-black"
-        }`}
-      >
-        {isUser ? (
-          message.content
-        ) : (
-          <div className="markdown">
-            <ReactMarkdown
-              components={{
-                pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
+    <div className={`message-row ${isUser ? "is-user" : "is-assistant"}`}>
+      <div className="message-stack">
+        {!isUser && (
+          <div className="message-avatar assistant" aria-hidden>
+            AI
+          </div>
+        )}
+
+        <div className={`message-bubble ${isUser ? "user" : "assistant"}`}>
+          {isUser ? (
+            message.content
+          ) : showTyping ? (
+            <div className="typing-dots" aria-label="Assistant is typing">
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : (
+            <div className="markdown">
+              <ReactMarkdown
+                components={{
+                  pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+              {isStreaming ? <span className="streaming-caret" /> : null}
+            </div>
+          )}
+        </div>
+
+        {isUser && (
+          <div className="message-avatar user" aria-hidden>
+            You
           </div>
         )}
       </div>
