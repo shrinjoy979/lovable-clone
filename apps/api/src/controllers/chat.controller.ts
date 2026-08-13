@@ -50,7 +50,7 @@ class ChatController {
             });
 
             for await (const chunk of stream) {
-                res.write(`data: ${chunk}\n\n`);
+                res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             }
         } catch(error) {
             console.error("Error in streaming", error);

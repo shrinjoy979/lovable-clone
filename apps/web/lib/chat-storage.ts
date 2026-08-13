@@ -1,5 +1,5 @@
 import type { ChatSession } from "../types/chat";
-import { createChatSession } from "../types/chat";
+import { createChatSession, normalizeSession } from "../types/chat";
 
 const STORAGE_KEY = "lovable-chat-sessions";
 const ACTIVE_KEY = "lovable-active-chat-id";
@@ -15,7 +15,8 @@ export function loadSessions(): {
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    const sessions = raw ? (JSON.parse(raw) as ChatSession[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as ChatSession[]) : [];
+    const sessions = parsed.map(normalizeSession);
     const activeId = window.localStorage.getItem(ACTIVE_KEY);
 
     if (!sessions.length) {

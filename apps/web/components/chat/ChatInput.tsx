@@ -53,7 +53,7 @@ export default function ChatInput({
           disabled={isLoading}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask Lovable to build anything…"
+          placeholder="Describe an app to build…"
           rows={1}
           className="min-h-[44px] max-h-[180px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 shadow-none outline-none focus:ring-0"
         />
