@@ -5,20 +5,20 @@ import { Button, Textarea } from "@repo/ui";
 
 interface ChatInputProps {
   onSend(message: string): void;
+  onStop: () => void;
   isLoading: boolean;
 }
 
 export default function ChatInput({
   onSend,
+  onStop,
   isLoading,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
 
   function handleSend() {
     if (!message.trim()) return;
-
     onSend(message);
-
     setMessage("");
   }
 
@@ -34,10 +34,9 @@ export default function ChatInput({
       />
 
       <Button
-        onClick={handleSend}
-        disabled={isLoading}
+        onClick={isLoading ? onStop : handleSend}
       >
-        {isLoading ? "Generating..." : "Send"}
+        {isLoading ? "Stop" : "Send"}
       </Button>
     </div>
   );

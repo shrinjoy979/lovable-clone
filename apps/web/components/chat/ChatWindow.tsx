@@ -6,7 +6,7 @@ import ChatMessages from "./ChatMessages";
 import { useChat } from "../../hooks/useChat";
 
 export default function ChatWindow() {
-  const { messages, sendMessage, isLoading } = useChat();
+  const { messages, sendMessage, stopGeneration, isLoading } = useChat();
 
   return (
     <div className="mx-auto flex h-screen max-w-4xl flex-col p-6">
@@ -17,6 +17,7 @@ export default function ChatWindow() {
       <div className="mt-4">
         <ChatInput 
           onSend={sendMessage}
+          onStop={stopGeneration}
           isLoading={isLoading}
         />
       </div>

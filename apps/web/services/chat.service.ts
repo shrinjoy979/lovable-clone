@@ -12,6 +12,7 @@ class ChatService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(options),
+        signal: options.signal,
       }
     );
 

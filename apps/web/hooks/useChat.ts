@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Message } from "@repo/shared/chat";
 
@@ -8,12 +8,13 @@ import chatService from "../services/chat.service";
 
 export function useChat() {
     const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hello! How can I help you today?",
-    },
-  ]);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const [messages, setMessages] = useState<Message[]>([
+        {
+        role: "assistant",
+        content: "Hello! How can I help you today?",
+        },
+    ]);
 
   function updateLastMessage(content: string) {
     setMessages((prev) => {
@@ -57,27 +58,41 @@ export function useChat() {
 
     setIsLoading(true);
     try {
-      let response = "";
+        let response = "";
 
-      const stream = chatService.generateStream({
-        messages: conversation,
-      });
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
 
-      for await (const chunk of stream) {
-        response += chunk;
-        updateLastMessage(response);
-      }
+        const stream = chatService.generateStream({
+            messages: conversation,
+            signal: abortController.signal,
+        });
+
+        for await (const chunk of stream) {
+            response += chunk;
+            updateLastMessage(response);
+        }
     } catch (error) {
-      console.error(error);
-      updateLastMessage("Something went wrong.");
+      if (error instanceof DOMException && error.name === "AbortError") {
+        console.log("Generation stopped by user.");
+      } else {
+        console.error(error);
+        updateLastMessage("Something went wrong.");
+      }
     } finally {
+        abortControllerRef.current = null;
         setIsLoading(false);
     }
+  }
+
+  function stopGeneration() {
+    abortControllerRef.current?.abort();
   }
 
   return {
     messages,
     sendMessage,
+    stopGeneration,
     isLoading,
   };
 }
