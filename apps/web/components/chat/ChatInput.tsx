@@ -5,10 +5,12 @@ import { Button, Textarea } from "@repo/ui";
 
 interface ChatInputProps {
   onSend(message: string): void;
+  isLoading: boolean;
 }
 
 export default function ChatInput({
   onSend,
+  isLoading,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
 
@@ -24,14 +26,18 @@ export default function ChatInput({
     <div className="flex gap-3">
       <Textarea
         value={message}
+        disabled={isLoading}
         onChange={(e) =>
           setMessage(e.target.value)
         }
         placeholder="Ask anything..."
       />
 
-      <Button onClick={handleSend}>
-        Send
+      <Button
+        onClick={handleSend}
+        disabled={isLoading}
+      >
+        {isLoading ? "Generating..." : "Send"}
       </Button>
     </div>
   );

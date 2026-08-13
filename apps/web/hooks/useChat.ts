@@ -7,6 +7,7 @@ import type { Message } from "@repo/shared/chat";
 import chatService from "../services/chat.service";
 
 export function useChat() {
+    const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -54,6 +55,7 @@ export function useChat() {
       assistantMessage,
     ]);
 
+    setIsLoading(true);
     try {
       let response = "";
 
@@ -68,11 +70,14 @@ export function useChat() {
     } catch (error) {
       console.error(error);
       updateLastMessage("Something went wrong.");
+    } finally {
+        setIsLoading(false);
     }
   }
 
   return {
     messages,
     sendMessage,
+    isLoading,
   };
 }
