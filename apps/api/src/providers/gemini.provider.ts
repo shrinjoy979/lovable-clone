@@ -45,7 +45,13 @@ export class GeminiProvider implements AIProvider {
         }
       }
     }catch(error) {
-      throw new Error("Failed to stream response from gemini", { cause: error });
+      if (error instanceof Error && error.name === "AbortError") {
+        throw error;
+      }
+    
+      throw new Error("Failed to stream response from gemini", {
+        cause: error,
+      });
     }
   }
 }
