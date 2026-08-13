@@ -38,9 +38,20 @@ class ChatService {
       buffer = events.pop() ?? "";
 
       for (const event of events) {
-        if (!event.startsWith("data: ")) continue;
+        const line = event
+          .split("\n")
+          .find((entry) => entry.startsWith("data: "));
 
-        yield event.slice(6);
+        if (!line) continue;
+
+        const payload = line.slice(6);
+
+        try {
+          yield JSON.parse(payload) as string;
+        } catch {
+          // Backward-compatible with older unencoded streams
+          yield payload;
+        }
       }
     }
   }

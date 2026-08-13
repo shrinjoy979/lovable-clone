@@ -28,7 +28,7 @@ function getLanguage(node: ReactNode): string {
     return "";
   }
 
-  const match = /language-([\w-]+)/.exec(node.props.className ?? "");
+  const match = /language-(\S+)/.exec(node.props.className ?? "");
   return match?.[1] ?? "";
 }
 

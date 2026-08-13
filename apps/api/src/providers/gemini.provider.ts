@@ -8,21 +8,32 @@ export class GeminiProvider implements AIProvider {
     apiKey: env.GEMINI_API_KEY!,
   });
 
-  private mapMessages(messages: Message[]): string {
-    const prompt = messages
-      .map((m) => `${m.role}: ${m.content}`)
-      .join("\n");
+  private splitMessages(messages: Message[]) {
+    const systemInstruction = messages
+      .filter((message) => message.role === "system")
+      .map((message) => message.content)
+      .join("\n\n");
 
-      return prompt;
+    const contents = messages
+      .filter((message) => message.role !== "system")
+      .map((message) => ({
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [{ text: message.content }],
+      }));
+
+    return { systemInstruction, contents };
   }
 
   async generate(options: GenerateOptions): Promise<string> {
     const { messages } = options;
-    const prompt = this.mapMessages(messages);
+    const { systemInstruction, contents } = this.splitMessages(messages);
 
     const response = await this.client.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt
+      contents,
+      ...(systemInstruction
+        ? { config: { systemInstruction } }
+        : {}),
     });
 
     return response.text ?? "";
@@ -30,25 +41,28 @@ export class GeminiProvider implements AIProvider {
 
   async *generateStream(options: GenerateOptions): AsyncGenerator<string> {
     const { messages, signal } = options;
-    const prompt = this.mapMessages(messages);
+    const { systemInstruction, contents } = this.splitMessages(messages);
 
     try {
       const stream = await this.client.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: prompt,
-        ...(signal ? {config: {abortSignal: signal}} : {}),
+        contents,
+        config: {
+          ...(systemInstruction ? { systemInstruction } : {}),
+          ...(signal ? { abortSignal: signal } : {}),
+        },
       });
-  
+
       for await (const chunk of stream) {
-        if(chunk.text?.trim()) {
-          yield chunk.text
+        if (chunk.text?.trim()) {
+          yield chunk.text;
         }
       }
-    }catch(error) {
+    } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throw error;
       }
-    
+
       throw new Error("Failed to stream response from gemini", {
         cause: error,
       });

@@ -3,6 +3,7 @@
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 import Sidebar from "../layout/Sidebar";
+import WorkspacePanel from "../workspace/WorkspacePanel";
 import { useChat } from "../../hooks/useChat";
 
 export default function ChatWindow() {
@@ -11,12 +12,15 @@ export default function ChatWindow() {
     sessions,
     activeId,
     messages,
+    files,
     sendMessage,
     stopGeneration,
     isLoading,
     createChat,
     selectChat,
     deleteChat,
+    updateFile,
+    syncPreviewFromChat,
   } = useChat();
 
   return (
@@ -56,6 +60,13 @@ export default function ChatWindow() {
           </div>
         </div>
       </div>
+
+      <WorkspacePanel
+        files={files}
+        isUpdating={isLoading}
+        onFileChange={updateFile}
+        onSyncFromChat={syncPreviewFromChat}
+      />
     </div>
   );
 }
