@@ -1,5 +1,6 @@
 import type { Message } from "@repo/shared/chat";
 import ReactMarkdown from "react-markdown";
+import CodeBlock from "./CodeBlock";
 
 interface ChatMessageProps {
   message: Message;
@@ -21,7 +22,13 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           message.content
         ) : (
           <div className="markdown">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
           </div>
         )}
       </div>
