@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Code2, Eye, RefreshCw } from "lucide-react";
+import { Code2, ExternalLink, Eye, RefreshCw } from "lucide-react";
 import type { ProjectFiles } from "../../types/chat";
 import { downloadCodebase } from "../../lib/download-codebase";
+import { openPreviewInNewTab } from "../../lib/preview";
 import FileExplorer from "./FileExplorer";
 import CodeViewer from "./CodeViewer";
 import LivePreview from "./LivePreview";
@@ -68,17 +69,29 @@ export default function WorkspacePanel({
           Code
         </button>
 
-        {onSyncFromChat ? (
+        <div className="workspace-toolbar">
           <button
             type="button"
-            className="workspace-tab workspace-sync"
-            onClick={handleSync}
-            title="Apply code from the latest chat reply to preview"
+            className="workspace-tab"
+            onClick={() => openPreviewInNewTab(files)}
+            title="Open preview in a new tab"
           >
-            <RefreshCw size={14} />
-            Sync
+            <ExternalLink size={14} />
+            Open
           </button>
-        ) : null}
+
+          {onSyncFromChat ? (
+            <button
+              type="button"
+              className="workspace-tab"
+              onClick={handleSync}
+              title="Apply code from the latest chat reply to preview"
+            >
+              <RefreshCw size={14} />
+              Sync
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {syncMessage ? (
