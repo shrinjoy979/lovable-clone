@@ -300,7 +300,6 @@ Install dependencies:
 ```bash
 npm install
 ```
-
 Start the development server:
 
 ```bash
@@ -364,3 +363,4 @@ This project demonstrates practical implementation of:
 
 pnpm --filter web dev
 This project is intended for educational purposes and experimentation with modern AI application architecture.
+

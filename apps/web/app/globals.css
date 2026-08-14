@@ -341,11 +341,13 @@ body {
 }
 
 .file-explorer {
+  display: flex;
   width: 180px;
   flex-shrink: 0;
+  flex-direction: column;
   border-right: 1px solid var(--border);
   background: #fafaf8;
-  overflow: auto;
+  min-height: 0;
 }
 
 .file-explorer-label {
@@ -359,9 +361,11 @@ body {
 
 .file-explorer-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.25rem 0.45rem 0.85rem;
+  overflow: auto;
 }
 
 .file-explorer-item {
@@ -392,6 +396,34 @@ body {
 .file-explorer-item.is-active {
   background: #ecece8;
   font-weight: 500;
+}
+
+.file-explorer-footer {
+  margin-top: auto;
+  padding: 0.55rem;
+  border-top: 1px solid var(--border);
+}
+
+.file-explorer-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.55rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--bg-elevated);
+  color: var(--fg);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.file-explorer-download:hover {
+  background: #f3f3f0;
+  border-color: #d8d8d2;
 }
 
 .code-viewer {
