@@ -1,3 +1,7 @@
+
+https://github.com/user-attachments/assets/d9c40fc9-cafa-471b-83e9-4e5c70386472
+
+
 # Lovable Clone
 
 Build apps by chatting with AI — with live preview, file explorer, streaming chat, and downloadable codebases.
@@ -43,6 +47,8 @@ This is an educational monorepo inspired by [Lovable](https://lovable.dev): desc
 | AI | Google Gemini (`@google/genai`), OpenAI |
 | Streaming | SSE + `AsyncGenerator` |
 | UI | `@repo/ui`, Lucide icons, `react-markdown` |
+| Frontend hosting | [Vercel](https://vercel.com) |
+| Backend hosting | [Render](https://render.com) (Web Service) |
 
 ---
 
@@ -233,21 +239,47 @@ pnpm check-types   # typecheck
 
 ---
 
-## Deployment Notes
+## Hosting
 
-### API
+This project is hosted as:
 
-- Deploy `apps/api` to a Node host (Railway, Render, Fly.io, etc.)
-- Set the same env vars as local `.env`
-- Set `FRONTEND_URL` to your deployed web origin (CORS)
+- **Frontend (`apps/web`)** → [Vercel](https://vercel.com)
+- **Backend (`apps/api`)** → [Render](https://render.com) (Web Service)
 
-### Web
+### Vercel (frontend)
 
-- Deploy `apps/web` to Vercel (or similar)
-- Set `NEXT_PUBLIC_API_URL` to your deployed API URL
-- Build: `pnpm --filter web build`
+1. Import the GitHub repo
+2. Set Root Directory to `apps/web` (monorepo install still includes `packages/`)
+3. Add env:
 
-### Share without hosting
+```env
+NEXT_PUBLIC_API_URL=https://your-api.onrender.com
+```
+
+### Render (backend)
+
+1. Create a **Web Service** from the same GitHub repo
+2. Suggested commands (from repo root):
+
+```bash
+# Build
+pnpm install --frozen-lockfile
+
+# Start
+pnpm --filter api exec tsx src/index.ts
+```
+
+3. Add env:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key
+FRONTEND_URL=https://your-app.vercel.app
+```
+
+`FRONTEND_URL` must match your Vercel origin exactly (for CORS).
+
+### Share without hosting the full stack
 
 Use **Download codebase** in the file explorer to get a ZIP of generated files, or **Open** to view the preview in a new tab.
 
