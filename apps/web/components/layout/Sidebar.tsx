@@ -1,7 +1,9 @@
 "use client";
 
-import { MessageSquarePlus, Trash2 } from "lucide-react";
+import { MessageSquarePlus, Star, Trash2 } from "lucide-react";
 import type { ChatSession } from "../../types/chat";
+
+const GITHUB_REPO_URL = "https://github.com/shrinjoy979/lovable-clone";
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -83,6 +85,18 @@ export default function Sidebar({
             </div>
           );
         })}
+      </div>
+
+      <div className="chat-sidebar-footer">
+        <a
+          href={GITHUB_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="chat-github-btn"
+        >
+          <Star size={15} />
+          Star on GitHub
+        </a>
       </div>
     </aside>
   );

@@ -1,366 +1,273 @@
-# AI Chat Backend
+# Lovable Clone
 
-A production-style AI chat backend built with **Node.js**, **Express**, **TypeScript**, and a clean layered architecture. The project supports multiple AI providers through a provider abstraction and includes real-time streaming responses using **Server-Sent Events (SSE)**.
+Build apps by chatting with AI — with live preview, file explorer, streaming chat, and downloadable codebases.
+
+**Repo:** [github.com/shrinjoy979/lovable-clone](https://github.com/shrinjoy979/lovable-clone) · ⭐ Star on GitHub if you find it useful
+
+This is an educational monorepo inspired by [Lovable](https://lovable.dev): describe a UI in chat, and the AI generates HTML/CSS/JS that updates a live preview.
+
+---
 
 ## Features
 
-* 🚀 TypeScript + Express
-* 🤖 Multiple AI providers (Gemini & OpenAI)
-* 🏗️ Provider Pattern & Factory Pattern
-* 📦 Shared request/response types
-* ✅ Request validation using Zod
-* 🌊 Real-time streaming responses with Server-Sent Events (SSE)
-* ⛔ Request cancellation using `AbortController`
-* 🧩 Clean layered architecture
-* 🔄 Easy to extend with additional AI providers
+### Frontend (`apps/web`)
+
+- Streaming AI chat with markdown + copy-code blocks
+- Polished chat UI (typing indicator, streaming caret)
+- Chat / project history sidebar (create, switch, delete)
+- File explorer + editable code viewer
+- Live preview via sandboxed `iframe` + `srcDoc`
+- Smooth preview crossfade while generating
+- Open preview in a new tab
+- Download codebase as ZIP
+- Star on GitHub button in the sidebar
+
+### Backend (`apps/api`)
+
+- Express + TypeScript layered architecture
+- Multiple AI providers (Gemini & OpenAI) via Provider + Factory patterns
+- Real-time streaming with Server-Sent Events (SSE)
+- Request cancellation with `AbortController`
+- Zod request validation
+- Shared types via `@repo/shared`
 
 ---
 
-# Tech Stack
+## Tech Stack
 
-* Node.js
-* Express
-* TypeScript
-* Zod
-* Google Gemini API
-* OpenAI API
-* Server-Sent Events (SSE)
+| Area | Stack |
+|------|--------|
+| Monorepo | pnpm workspaces + Turborepo |
+| Web | Next.js 16, React 19, Tailwind CSS 4 |
+| API | Node.js, Express 5, TypeScript |
+| AI | Google Gemini (`@google/genai`), OpenAI |
+| Streaming | SSE + `AsyncGenerator` |
+| UI | `@repo/ui`, Lucide icons, `react-markdown` |
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```text
-src
-├── app.ts
-├── index.ts
-├── config
-├── controllers
-│   └── chat.controller.ts
-├── middleware
-├── providers
-│   ├── ai-provider.interface.ts
-│   ├── gemini.provider.ts
-│   ├── openai.provider.ts
-│   └── provider.factory.ts
-├── routes
-│   └── chat.routes.ts
-├── services
-│   └── chat.service.ts
-├── validations
-│   └── chat.validation.ts
-└── types
+lovable-clone/
+├── apps/
+│   ├── api/                 # Express AI backend
+│   │   └── src/
+│   │       ├── controllers/
+│   │       ├── providers/   # Gemini, OpenAI, factory
+│   │       ├── routes/
+│   │       ├── services/
+│   │       └── validations/
+│   └── web/                 # Next.js Lovable-style UI
+│       ├── app/
+│       ├── components/
+│       │   ├── chat/
+│       │   ├── layout/
+│       │   └── workspace/   # Preview, files, code
+│       ├── hooks/
+│       ├── lib/
+│       └── services/
+└── packages/
+    ├── shared/              # Shared chat types
+    ├── ui/                  # Shared UI primitives
+    ├── eslint-config/
+    └── typescript-config/
 ```
 
 ---
 
-# Architecture
+## Getting Started
 
-```text
-               HTTP Request
-                     │
-                     ▼
-               Express Router
-                     │
-                     ▼
-               Chat Controller
-                     │
-                     ▼
-                Chat Service
-                     │
-                     ▼
-              Provider Factory
-                     │
-          ┌──────────┴──────────┐
-          ▼                     ▼
-   Gemini Provider      OpenAI Provider
-          │                     │
-          └──────────┬──────────┘
-                     ▼
-                AI Provider API
+### Prerequisites
+
+- Node.js >= 18
+- pnpm 9
+
+### 1. Install
+
+```bash
+pnpm install
 ```
 
----
+### 2. Environment
 
-# Streaming Architecture
+**API** — create `apps/api/.env`:
 
-```text
-Browser
-    │
-fetch("/chat/stream")
-    │
-    ▼
-Express Controller
-    │
-    ▼
-Chat Service
-    │
-    ▼
-Gemini/OpenAI Provider
-    │
-    ▼
-AsyncGenerator<string>
-    │
-    ▼
-Server-Sent Events (SSE)
-    │
-    ▼
-Browser receives chunks in real time
-```
-
----
-
-# Design Patterns Used
-
-## Provider Pattern
-
-Each AI model implements the same interface.
-
-```ts
-interface AIProvider {
-    generate(options: GenerateOptions): Promise<string>;
-
-    generateStream(
-        options: GenerateOptions
-    ): AsyncGenerator<string>;
-}
-```
-
-Supported providers:
-
-* Gemini
-* OpenAI
-
-Adding a new provider only requires implementing the interface.
-
----
-
-## Factory Pattern
-
-The provider is selected at runtime using an environment variable.
-
-```text
+```env
+PORT=3001
 AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key
+OPENAI_API_KEY=your_openai_api_key
+FRONTEND_URL=http://localhost:3000
 ```
 
-or
+**Web** — create `apps/web/.env.local`:
 
-```text
-AI_PROVIDER=openai
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
+
+### 3. Run
+
+```bash
+pnpm dev
+```
+
+Or separately:
+
+```bash
+pnpm --filter api dev
+pnpm --filter web dev
+```
+
+| App | URL |
+|-----|-----|
+| Web | http://localhost:3000 |
+| API | http://localhost:3001 |
+| Health | http://localhost:3001/health |
 
 ---
 
-## Layered Architecture
+## How It Works
 
 ```text
-Route
-    ↓
-Controller
-    ↓
-Service
-    ↓
-Provider
-    ↓
-AI SDK
+User prompt
+    │
+    ▼
+Next.js chat UI  ──SSE──►  Express /chat/stream
+                                │
+                                ▼
+                         Provider Factory
+                          (Gemini / OpenAI)
+                                │
+                                ▼
+                    Stream tokens back to UI
+                                │
+                ┌───────────────┴───────────────┐
+                ▼                               ▼
+         Chat markdown                   Parse code fences
+                                                │
+                                                ▼
+                                      Update project files
+                                                │
+                                                ▼
+                                      Live iframe preview
 ```
 
-Each layer has a single responsibility.
-
-### Routes
-
-* Define API endpoints.
-
-### Controllers
-
-* Handle HTTP requests and responses.
-* Validate input.
-* Stream SSE responses.
-
-### Services
-
-* Coordinate business logic.
-* Delegate AI generation to the selected provider.
-
-### Providers
-
-* Communicate with external AI SDKs.
-* Convert application messages into provider-specific formats.
-* Support both standard and streaming responses.
+1. You describe an app in chat.
+2. The API streams the model response over SSE.
+3. The web app parses code fences (`html` / `css` / `js` / `file:path`) into workspace files.
+4. Preview builds a single HTML document and renders it in a sandboxed iframe.
 
 ---
 
-# API Endpoints
+## API Endpoints
 
-## Generate Response
+### Generate response
 
 ```http
 POST /chat
 ```
 
-### Request
-
 ```json
 {
   "messages": [
-    {
-      "role": "user",
-      "content": "Explain React Hooks."
-    }
+    { "role": "user", "content": "Build a landing page with a count button" }
   ]
 }
 ```
 
-### Response
-
-```json
-{
-  "response": "React Hooks are..."
-}
-```
-
----
-
-## Stream Response
+### Stream response (SSE)
 
 ```http
 POST /chat/stream
 ```
 
-Response uses **Server-Sent Events (SSE)**.
+Chunks are JSON-encoded in `data:` events so newlines in code don’t break the stream.
 
-Example stream:
+### Health
 
-```text
-data: React
-
-data: Hooks
-
-data: allow...
-
+```http
+GET /health
 ```
 
 ---
 
-# Validation
+## Design Patterns (API)
 
-All requests are validated using **Zod** before reaching the service layer.
+### Provider pattern
 
-Rules include:
+```ts
+interface AIProvider {
+  generate(options: GenerateOptions): Promise<string>;
+  generateStream(options: GenerateOptions): AsyncGenerator<string>;
+}
+```
 
-* At least one message is required
-* Supported roles:
+### Factory pattern
 
-  * user
-  * assistant
-  * system
-* Content cannot be empty
-* Maximum content length: 5000 characters
-
----
-
-# Streaming
-
-Streaming responses are implemented using:
-
-* AsyncGenerator
-* Server-Sent Events (SSE)
-* AbortController
-* Readable Streams
-
-If the client disconnects:
-
-1. Express detects the connection close.
-2. `AbortController` aborts the request.
-3. The AI provider stops generating tokens.
-4. Resources are cleaned up automatically.
-
----
-
-# Environment Variables
-
-Create a `.env` file.
+Select the provider with:
 
 ```env
-PORT=3001
-
 AI_PROVIDER=gemini
-
-GEMINI_API_KEY=your_gemini_api_key
-
-OPENAI_API_KEY=your_openai_api_key
+# or
+AI_PROVIDER=openai
 ```
 
----
-
-# Run Locally
-
-Install dependencies:
-
-```bash
-npm install
-```
-Start the development server:
-
-```bash
-npm run dev
-```
-
-The server will start on:
+### Layered architecture
 
 ```text
-http://localhost:3001
+Route → Controller → Service → Provider → AI SDK
 ```
 
 ---
 
-# Future Improvements
+## Scripts
 
-* Conversation persistence
-* Authentication
-* Rate limiting
-* Request logging
-* Metrics & monitoring
-* Unit tests
-* Docker support
-* Redis caching
-* Conversation memory
-* Model configuration per request
-* Tool calling / Function calling
-* Image generation support
-* File uploads
+```bash
+pnpm dev           # run all apps
+pnpm build         # build all packages/apps
+pnpm lint          # lint
+pnpm check-types   # typecheck
+```
 
 ---
 
-# Learning Objectives
+## Deployment Notes
 
-This project demonstrates practical implementation of:
+### API
 
-* Express.js
-* TypeScript
-* Clean Architecture
-* Layered Architecture
-* Provider Pattern
-* Factory Pattern
-* AsyncGenerator
-* Server-Sent Events (SSE)
-* AbortController
-* Streaming APIs
-* Zod Validation
-* AI SDK Integration
+- Deploy `apps/api` to a Node host (Railway, Render, Fly.io, etc.)
+- Set the same env vars as local `.env`
+- Set `FRONTEND_URL` to your deployed web origin (CORS)
+
+### Web
+
+- Deploy `apps/web` to Vercel (or similar)
+- Set `NEXT_PUBLIC_API_URL` to your deployed API URL
+- Build: `pnpm --filter web build`
+
+### Share without hosting
+
+Use **Download codebase** in the file explorer to get a ZIP of generated files, or **Open** to view the preview in a new tab.
 
 ---
 
-# License
+## Future Improvements
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
-# lovable-clone
+- Auth & multi-user workspaces
+- Persistent server-side project storage
+- Rate limiting & request logging
+- Docker Compose setup
+- Stronger OpenAI streaming parity
+- Tests (unit + e2e)
 
-pnpm --filter web dev
-This project is intended for educational purposes and experimentation with modern AI application architecture.
+---
 
+## License
+
+Educational / experimental use. See repository for details.
+
+---
+
+If this helped you learn streaming AI apps or monorepo architecture, please [⭐ star the repo](https://github.com/shrinjoy979/lovable-clone).
