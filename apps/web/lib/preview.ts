@@ -82,3 +82,21 @@ export function buildPreviewHtml(files: ProjectFiles): string {
 
   return documentHtml;
 }
+
+/** Opens the current project preview in a new browser tab. */
+export function openPreviewInNewTab(files: ProjectFiles) {
+  const html = buildPreviewHtml(files);
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const tab = window.open(url, "_blank", "noopener,noreferrer");
+
+  if (!tab) {
+    URL.revokeObjectURL(url);
+    window.alert("Pop-up blocked. Allow pop-ups to open the preview.");
+    return;
+  }
+
+  // Keep the blob alive briefly, then revoke after the tab has loaded.
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
