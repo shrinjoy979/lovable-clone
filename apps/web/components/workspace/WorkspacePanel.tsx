@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Code2, Eye, RefreshCw } from "lucide-react";
 import type { ProjectFiles } from "../../types/chat";
+import { downloadCodebase } from "../../lib/download-codebase";
 import FileExplorer from "./FileExplorer";
 import CodeViewer from "./CodeViewer";
 import LivePreview from "./LivePreview";
@@ -92,6 +93,11 @@ export default function WorkspacePanel({
             files={files}
             activeFile={activeFile}
             onSelect={setActiveFile}
+            onDownloadCodebase={() => {
+              downloadCodebase(files);
+              setSyncMessage("Downloaded codebase.zip");
+              window.setTimeout(() => setSyncMessage(null), 2500);
+            }}
           />
           <CodeViewer
             path={activeFile}

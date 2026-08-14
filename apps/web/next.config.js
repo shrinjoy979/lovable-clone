@@ -9,6 +9,7 @@ const nextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  devIndicators: false,
 };
 
 export default nextConfig;
