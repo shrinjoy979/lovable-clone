@@ -93,7 +93,8 @@ export function useSpeechToText() {
 
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         const result = event.results[i];
-        const piece = result?.[0]?.transcript ?? "";
+        if (!result) continue;
+        const piece = result[0]?.transcript ?? "";
         if (!piece) continue;
         if (result.isFinal) {
           finals = `${finals} ${piece}`.replace(/\s+/g, " ").trim();
