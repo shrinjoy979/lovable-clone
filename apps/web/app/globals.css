@@ -651,26 +651,35 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.typing-dots {
+.thinking-status {
   display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0;
+  align-items: baseline;
+  gap: 0.05rem;
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--fg-muted);
+  font-size: 0.92rem;
 }
 
-.typing-dots span {
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 999px;
-  background: #a3a3a3;
-  animation: typing-bounce 1s infinite ease-in-out;
+.thinking-status-text {
+  display: inline-block;
+  animation: thinking-fade 1800ms ease;
 }
 
-.typing-dots span:nth-child(2) {
+.thinking-ellipsis {
+  display: inline-flex;
+  letter-spacing: 0.02em;
+}
+
+.thinking-ellipsis span {
+  animation: thinking-dot 1.2s infinite ease-in-out;
+}
+
+.thinking-ellipsis span:nth-child(2) {
   animation-delay: 0.15s;
 }
 
-.typing-dots span:nth-child(3) {
+.thinking-ellipsis span:nth-child(3) {
   animation-delay: 0.3s;
 }
 
@@ -695,16 +704,25 @@ body {
   }
 }
 
-@keyframes typing-bounce {
+@keyframes thinking-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes thinking-dot {
   0%,
   80%,
   100% {
-    opacity: 0.35;
-    transform: translateY(0);
+    opacity: 0.25;
   }
   40% {
     opacity: 1;
-    transform: translateY(-2px);
   }
 }
 
