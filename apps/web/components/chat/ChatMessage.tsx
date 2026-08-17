@@ -1,6 +1,7 @@
 import type { Message } from "@repo/shared/chat";
 import ReactMarkdown from "react-markdown";
 import CodeBlock from "./CodeBlock";
+import ThinkingStatus from "./ThinkingStatus";
 
 interface ChatMessageProps {
   message: Message;
@@ -27,11 +28,7 @@ export default function ChatMessage({
           {isUser ? (
             message.content
           ) : showTyping ? (
-            <div className="typing-dots" aria-label="Assistant is typing">
-              <span />
-              <span />
-              <span />
-            </div>
+            <ThinkingStatus />
           ) : (
             <div className="markdown">
               <ReactMarkdown
