@@ -11,7 +11,10 @@ class ChatService {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(options),
+        body: JSON.stringify({
+          messages: options.messages,
+          model: options.model,
+        }),
         signal: options.signal,
       }
     );
