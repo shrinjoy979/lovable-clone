@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { Message } from "@repo/shared/chat";
+import type { GeminiModelId, Message } from "@repo/shared/chat";
 
 import { loadSessions, saveSessions } from "../lib/chat-storage";
 import { parseGeneratedFiles } from "../lib/parse-files";
@@ -116,7 +116,7 @@ export function useChat() {
     return Object.keys(parsed).length;
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, model?: GeminiModelId) {
     if (!activeSession) return;
 
     const sessionId = activeSession.id;
@@ -157,6 +157,7 @@ export function useChat() {
           visibleConversation,
           activeSession.files
         ),
+        model,
         signal: abortController.signal,
       });
 

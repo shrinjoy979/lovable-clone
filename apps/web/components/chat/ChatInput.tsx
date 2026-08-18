@@ -6,14 +6,25 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { ArrowUp, Mic, Square } from "lucide-react";
-import { Button, Textarea } from "@repo/ui";
+import { ArrowUp, Check, ChevronDown, Mic, Sparkles, Square } from "lucide-react";
+import { Textarea } from "@repo/ui";
+import {
+  DEFAULT_GEMINI_MODEL,
+  GEMINI_MODELS,
+  type GeminiModelId,
+} from "@repo/shared/chat";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 
+const MODEL_STORAGE_KEY = "lovable-clone:model";
+
 interface ChatInputProps {
-  onSend(message: string): void;
+  onSend(message: string, model: GeminiModelId): void;
   onStop: () => void;
   isLoading: boolean;
+}
+
+function isGeminiModelId(value: string): value is GeminiModelId {
+  return GEMINI_MODELS.some((model) => model.id === value);
 }
 
 export default function ChatInput({
@@ -22,13 +33,25 @@ export default function ChatInput({
   isLoading,
 }: ChatInputProps) {
   const [typed, setTyped] = useState("");
+  const [model, setModel] = useState<GeminiModelId>(DEFAULT_GEMINI_MODEL);
+  const [modelOpen, setModelOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typedRef = useRef("");
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   const { supported, listening, transcript, error, start, stop, reset } =
     useSpeechToText();
 
   const message = [typed, transcript].filter(Boolean).join(" ").trimStart();
+  const selectedModel =
+    GEMINI_MODELS.find((option) => option.id === model) ?? GEMINI_MODELS[0];
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(MODEL_STORAGE_KEY);
+    if (stored && isGeminiModelId(stored)) {
+      setModel(stored);
+    }
+  }, []);
 
   useEffect(() => {
     typedRef.current = typed;
@@ -44,6 +67,17 @@ export default function ChatInput({
   useEffect(() => {
     if (isLoading && listening) stop();
   }, [isLoading, listening, stop]);
+
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      if (!pickerRef.current?.contains(event.target as Node)) {
+        setModelOpen(false);
+      }
+    }
+
+    window.addEventListener("mousedown", onPointerDown);
+    return () => window.removeEventListener("mousedown", onPointerDown);
+  }, []);
 
   function commitVoice() {
     const next = [typedRef.current, transcript]
@@ -68,7 +102,7 @@ export default function ChatInput({
     const text = message.trim();
     if (!text || isLoading) return;
     if (listening) stop();
-    onSend(text);
+    onSend(text, model);
     setTyped("");
     reset();
   }
@@ -80,59 +114,104 @@ export default function ChatInput({
     }
   }
 
+  function handleModelChange(value: GeminiModelId) {
+    setModel(value);
+    window.localStorage.setItem(MODEL_STORAGE_KEY, value);
+    setModelOpen(false);
+  }
+
   return (
     <>
       <div className="chat-composer-box">
-        <Textarea
-          ref={textareaRef}
-          value={message}
-          disabled={isLoading}
-          onChange={(e) => {
-            if (listening) return;
-            setTyped(e.target.value);
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            listening ? "Listening… speak now" : "Describe an app to build…"
-          }
-          rows={1}
-          className="min-h-[44px] max-h-[180px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 shadow-none outline-none focus:ring-0"
-        />
-
-        {supported && (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={toggleListening}
+        <div className="chat-composer-main">
+          <Textarea
+            ref={textareaRef}
+            value={message}
             disabled={isLoading}
-            aria-label={listening ? "Stop voice input" : "Start voice input"}
-            aria-pressed={listening}
-            title={listening ? "Stop listening" : "Voice to text"}
-            className={`mb-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0 ${
-              listening
-                ? "bg-red-100 text-red-600 hover:bg-red-200"
-                : "text-neutral-500 hover:text-neutral-800"
-            }`}
-          >
-            <Mic size={16} className={listening ? "animate-pulse" : undefined} />
-          </Button>
-        )}
+            onChange={(e) => {
+              if (listening) return;
+              setTyped(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              listening ? "Listening… speak now" : "Describe an app to build…"
+            }
+            rows={1}
+            className="min-h-[44px] max-h-[180px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-[0.97rem] leading-6 text-[var(--fg)] placeholder:text-[var(--fg-muted)] shadow-none outline-none focus:ring-0"
+          />
 
-        <Button
-          type="button"
-          size="sm"
-          onClick={isLoading ? onStop : handleSend}
-          disabled={!isLoading && !message.trim()}
-          aria-label={isLoading ? "Stop generating" : "Send message"}
-          className="mb-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-0"
-        >
-          {isLoading ? (
-            <Square size={14} fill="currentColor" />
-          ) : (
-            <ArrowUp size={16} />
-          )}
-        </Button>
+          <div className="chat-composer-actions">
+            {supported && (
+              <button
+                type="button"
+                onClick={toggleListening}
+                disabled={isLoading}
+                aria-label={listening ? "Stop voice input" : "Start voice input"}
+                aria-pressed={listening}
+                title={listening ? "Stop listening" : "Voice to text"}
+                className={`chat-icon-btn ${listening ? "is-listening" : ""}`}
+              >
+                <Mic size={16} className={listening ? "animate-pulse" : undefined} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={isLoading ? onStop : handleSend}
+              disabled={!isLoading && !message.trim()}
+              aria-label={isLoading ? "Stop generating" : "Send message"}
+              className={`chat-send-btn ${isLoading ? "is-stop" : ""}`}
+            >
+              {isLoading ? (
+                <Square size={13} fill="currentColor" />
+              ) : (
+                <ArrowUp size={16} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="chat-composer-tools">
+          <div className="chat-model-picker" ref={pickerRef}>
+            <button
+              type="button"
+              className="chat-model-trigger"
+              disabled={isLoading}
+              aria-haspopup="listbox"
+              aria-expanded={modelOpen}
+              aria-label="Select model"
+              onClick={() => setModelOpen((open) => !open)}
+            >
+              <span className="chat-model-trigger-icon" aria-hidden>
+                <Sparkles size={11} />
+              </span>
+              <span className="chat-model-trigger-label">
+                {selectedModel?.label ?? "Gemini 2.5 Flash"}
+              </span>
+              <ChevronDown size={14} />
+            </button>
+
+            {modelOpen && (
+              <div className="chat-model-menu" role="listbox">
+                {GEMINI_MODELS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="option"
+                    aria-selected={option.id === model}
+                    className={`chat-model-option ${
+                      option.id === model ? "is-active" : ""
+                    }`}
+                    onClick={() => handleModelChange(option.id)}
+                  >
+                    {option.label}
+                    {option.id === model ? <Check size={14} /> : null}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <p className="chat-composer-hint">

@@ -46,6 +46,7 @@ class ChatController {
         try {
             const stream = chatService.generateStream({
                 messages: result.data.messages,
+                model: result.data.model,
                 signal: abortController.signal,
             });
 

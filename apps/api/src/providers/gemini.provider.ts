@@ -1,6 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AIProvider } from "./ai-provider.interface.js";
-import type { GenerateOptions, Message } from "@repo/shared/chat";
+import {
+  DEFAULT_GEMINI_MODEL,
+  type GenerateOptions,
+  type Message,
+} from "@repo/shared/chat";
 import { env } from "../config/index.js";
 
 export class GeminiProvider implements AIProvider {
@@ -29,7 +33,7 @@ export class GeminiProvider implements AIProvider {
     const { systemInstruction, contents } = this.splitMessages(messages);
 
     const response = await this.client.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: options.model ?? DEFAULT_GEMINI_MODEL,
       contents,
       ...(systemInstruction
         ? { config: { systemInstruction } }
@@ -45,7 +49,7 @@ export class GeminiProvider implements AIProvider {
 
     try {
       const stream = await this.client.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: options.model ?? DEFAULT_GEMINI_MODEL,
         contents,
         config: {
           ...(systemInstruction ? { systemInstruction } : {}),
