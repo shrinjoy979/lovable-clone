@@ -1,6 +1,5 @@
 
-https://github.com/user-attachments/assets/d9c40fc9-cafa-471b-83e9-4e5c70386472
-
+https://github.com/user-attachments/assets/34510286-eb09-45cc-9591-88cc42b7fc35
 
 # Lovable Clone
 
@@ -23,6 +22,8 @@ This is an educational monorepo inspired by [Lovable](https://lovable.dev): desc
 - Live preview via sandboxed `iframe` + `srcDoc`
 - Smooth preview crossfade while generating
 - Open preview in a new tab
+- Select Model — choose the AI model that best fits your workflow
+- Custom API Key Support — bring your own key to unlock Pro model access
 - Download codebase as ZIP
 - Star on GitHub button in the sidebar
 
