@@ -7,10 +7,35 @@ import {
 } from "@repo/shared/chat";
 import { env } from "../config/index.js";
 
+function chunkText(chunk: {
+  text?: string | undefined;
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string; thought?: boolean }> };
+  }>;
+}) {
+  const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+  const fromParts = parts
+    .filter((part) => part.text && !part.thought)
+    .map((part) => part.text)
+    .join("");
+
+  if (fromParts) return fromParts;
+
+  try {
+    return chunk.text?.trim() ? chunk.text : "";
+  } catch {
+    return "";
+  }
+}
+
 export class GeminiProvider implements AIProvider {
-  private client = new GoogleGenAI({
-    apiKey: env.GEMINI_API_KEY!,
-  });
+  private getClient(apiKey?: string) {
+    const key = apiKey?.trim() || env.GEMINI_API_KEY;
+    if (!key) {
+      throw new Error("Missing Gemini API key");
+    }
+    return new GoogleGenAI({ apiKey: key });
+  }
 
   private splitMessages(messages: Message[]) {
     const systemInstruction = messages
@@ -31,13 +56,12 @@ export class GeminiProvider implements AIProvider {
   async generate(options: GenerateOptions): Promise<string> {
     const { messages } = options;
     const { systemInstruction, contents } = this.splitMessages(messages);
+    const client = this.getClient(options.apiKey);
 
-    const response = await this.client.models.generateContent({
+    const response = await client.models.generateContent({
       model: options.model ?? DEFAULT_GEMINI_MODEL,
       contents,
-      ...(systemInstruction
-        ? { config: { systemInstruction } }
-        : {}),
+      ...(systemInstruction ? { config: { systemInstruction } } : {}),
     });
 
     return response.text ?? "";
@@ -46,9 +70,10 @@ export class GeminiProvider implements AIProvider {
   async *generateStream(options: GenerateOptions): AsyncGenerator<string> {
     const { messages, signal } = options;
     const { systemInstruction, contents } = this.splitMessages(messages);
+    const client = this.getClient(options.apiKey);
 
     try {
-      const stream = await this.client.models.generateContentStream({
+      const stream = await client.models.generateContentStream({
         model: options.model ?? DEFAULT_GEMINI_MODEL,
         contents,
         config: {
@@ -58,9 +83,8 @@ export class GeminiProvider implements AIProvider {
       });
 
       for await (const chunk of stream) {
-        if (chunk.text?.trim()) {
-          yield chunk.text;
-        }
+        const text = chunkText(chunk);
+        if (text) yield text;
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

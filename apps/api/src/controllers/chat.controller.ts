@@ -1,6 +1,7 @@
 import chatService from "../services/chat.service.js";
 import type { Request, Response } from "express";
-import { chatSchema } from "../validations/chat.validation.js";
+import { chatSchema, geminiApiKeySchema } from "../validations/chat.validation.js";
+import { verifyGeminiApiKey } from "../lib/verify-gemini-key.js";
 import { z } from "zod";
 
 class ChatController {
@@ -14,7 +15,11 @@ class ChatController {
         }
 
         try {
-            const response = await chatService.generateResponse(result.data);
+            const response = await chatService.generateResponse({
+                messages: result.data.messages,
+                model: result.data.model,
+                apiKey: result.data.apiKey,
+            });
             return res.json({ response });
         } catch (_error) {
             return res.status(500).json({
@@ -47,6 +52,7 @@ class ChatController {
             const stream = chatService.generateStream({
                 messages: result.data.messages,
                 model: result.data.model,
+                apiKey: result.data.apiKey,
                 signal: abortController.signal,
             });
 
@@ -62,6 +68,26 @@ class ChatController {
             req.off("close", onClose);
             res.end();
         }        
+    }
+
+    async validateKey(req: Request, res: Response) {
+        const result = z.object({ apiKey: geminiApiKeySchema }).safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Enter a valid Gemini API key from Google AI Studio",
+            });
+        }
+
+        const valid = await verifyGeminiApiKey(result.data.apiKey);
+
+        if (!valid) {
+            return res.status(400).json({
+                error: "This API key is not valid",
+            });
+        }
+
+        return res.json({ valid: true });
     }
 }
 

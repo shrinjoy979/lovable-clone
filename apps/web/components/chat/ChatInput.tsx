@@ -6,19 +6,26 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { ArrowUp, Check, ChevronDown, Mic, Sparkles, Square } from "lucide-react";
+import { ArrowUp, ChevronDown, Mic, Sparkles, Square } from "lucide-react";
 import { Textarea } from "@repo/ui";
 import {
   DEFAULT_GEMINI_MODEL,
   GEMINI_MODELS,
+  modelRequiresApiKey,
   type GeminiModelId,
 } from "@repo/shared/chat";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
+import {
+  hasGeminiApiKey,
+  readGeminiApiKey,
+  saveGeminiApiKey,
+} from "../../lib/gemini-api-key";
+import ApiKeyModal from "./ApiKeyModal";
 
 const MODEL_STORAGE_KEY = "lovable-clone:model";
 
 interface ChatInputProps {
-  onSend(message: string, model: GeminiModelId): void;
+  onSend(message: string, model: GeminiModelId, apiKey?: string): void;
   onStop: () => void;
   isLoading: boolean;
 }
@@ -35,6 +42,9 @@ export default function ChatInput({
   const [typed, setTyped] = useState("");
   const [model, setModel] = useState<GeminiModelId>(DEFAULT_GEMINI_MODEL);
   const [modelOpen, setModelOpen] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [keyModalOpen, setKeyModalOpen] = useState(false);
+  const [pendingModel, setPendingModel] = useState<GeminiModelId | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typedRef = useRef("");
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +61,7 @@ export default function ChatInput({
     if (stored && isGeminiModelId(stored)) {
       setModel(stored);
     }
+    setHasApiKey(hasGeminiApiKey());
   }, []);
 
   useEffect(() => {
@@ -98,11 +109,26 @@ export default function ChatInput({
     start();
   }
 
+  function selectModel(value: GeminiModelId) {
+    setModel(value);
+    window.localStorage.setItem(MODEL_STORAGE_KEY, value);
+    setModelOpen(false);
+  }
+
   function handleSend() {
     const text = message.trim();
     if (!text || isLoading) return;
+    if (modelRequiresApiKey(model) && !hasGeminiApiKey()) {
+      setPendingModel(model);
+      setKeyModalOpen(true);
+      return;
+    }
     if (listening) stop();
-    onSend(text, model);
+    onSend(
+      text,
+      model,
+      modelRequiresApiKey(model) ? readGeminiApiKey() : undefined
+    );
     setTyped("");
     reset();
   }
@@ -115,9 +141,24 @@ export default function ChatInput({
   }
 
   function handleModelChange(value: GeminiModelId) {
-    setModel(value);
-    window.localStorage.setItem(MODEL_STORAGE_KEY, value);
-    setModelOpen(false);
+    if (modelRequiresApiKey(value) && !hasGeminiApiKey()) {
+      setPendingModel(value);
+      setModelOpen(false);
+      setKeyModalOpen(true);
+      return;
+    }
+
+    selectModel(value);
+  }
+
+  function handleSaveApiKey(apiKey: string) {
+    saveGeminiApiKey(apiKey);
+    setHasApiKey(true);
+    setKeyModalOpen(false);
+    if (pendingModel) {
+      selectModel(pendingModel);
+      setPendingModel(null);
+    }
   }
 
   return (
@@ -193,21 +234,38 @@ export default function ChatInput({
 
             {modelOpen && (
               <div className="chat-model-menu" role="listbox">
-                {GEMINI_MODELS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    role="option"
-                    aria-selected={option.id === model}
-                    className={`chat-model-option ${
-                      option.id === model ? "is-active" : ""
-                    }`}
-                    onClick={() => handleModelChange(option.id)}
-                  >
-                    {option.label}
-                    {option.id === model ? <Check size={14} /> : null}
-                  </button>
-                ))}
+                {GEMINI_MODELS.map((option) => {
+                  const selected = option.id === model;
+                  const needsKey = option.requiresApiKey && !hasApiKey;
+
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      className={`chat-model-option ${
+                        selected ? "is-active" : ""
+                      } ${needsKey ? "is-locked" : ""}`}
+                      onClick={() => handleModelChange(option.id)}
+                    >
+                      <span className="chat-model-option-label">
+                        {option.label}
+                      </span>
+                      {selected ? (
+                        <span className="chat-model-status">on</span>
+                      ) : needsKey ? (
+                        <span className="chat-model-status">
+                          need your API key
+                        </span>
+                      ) : option.requiresApiKey ? (
+                        <span className="chat-model-status">ready</span>
+                      ) : (
+                        <span className="chat-model-badge">FREE</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -223,6 +281,15 @@ export default function ChatInput({
                 supported ? " · Mic for voice input" : ""
               }`}
       </p>
+
+      <ApiKeyModal
+        open={keyModalOpen}
+        onClose={() => {
+          setKeyModalOpen(false);
+          setPendingModel(null);
+        }}
+        onSave={handleSaveApiKey}
+      />
     </>
   );
 }
