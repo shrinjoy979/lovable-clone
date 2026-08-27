@@ -14,6 +14,7 @@ class ChatService {
         body: JSON.stringify({
           messages: options.messages,
           model: options.model,
+          ...(options.apiKey ? { apiKey: options.apiKey } : {}),
         }),
         signal: options.signal,
       }
@@ -41,22 +42,46 @@ class ChatService {
       buffer = events.pop() ?? "";
 
       for (const event of events) {
-        const line = event
-          .split("\n")
-          .find((entry) => entry.startsWith("data: "));
+        const lines = event.split("\n");
+        const isError = lines.some((entry) => entry.startsWith("event: error"));
+        const line = lines.find((entry) => entry.startsWith("data: "));
 
         if (!line) continue;
 
         const payload = line.slice(6);
 
+        if (isError) {
+          throw new Error(payload || "Failed to generate response");
+        }
+
         try {
           yield JSON.parse(payload) as string;
         } catch {
-          // Backward-compatible with older unencoded streams
           yield payload;
         }
       }
     }
+  }
+
+  async validateApiKey(apiKey: string): Promise<void> {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/chat/validate-key`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ apiKey }),
+      }
+    );
+
+    if (response.ok) return;
+
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+
+    throw new Error(payload?.error || "This API key is not valid");
   }
 }
 

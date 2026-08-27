@@ -116,7 +116,11 @@ export function useChat() {
     return Object.keys(parsed).length;
   }
 
-  async function sendMessage(content: string, model?: GeminiModelId) {
+  async function sendMessage(
+    content: string,
+    model?: GeminiModelId,
+    apiKey?: string
+  ) {
     if (!activeSession) return;
 
     const sessionId = activeSession.id;
@@ -158,6 +162,7 @@ export function useChat() {
           activeSession.files
         ),
         model,
+        apiKey,
         signal: abortController.signal,
       });
 
