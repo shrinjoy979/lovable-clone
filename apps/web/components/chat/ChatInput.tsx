@@ -15,6 +15,7 @@ import {
   type GeminiModelId,
 } from "@repo/shared/chat";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
+import { useTypingPlaceholder } from "../../hooks/useTypingPlaceholder";
 import {
   hasGeminiApiKey,
   readGeminiApiKey,
@@ -23,6 +24,7 @@ import {
 import ApiKeyModal from "./ApiKeyModal";
 
 const MODEL_STORAGE_KEY = "lovable-clone:model";
+const IDLE_PLACEHOLDER = "Describe an app to build…";
 
 interface ChatInputProps {
   onSend(message: string, model: GeminiModelId, apiKey?: string): void;
@@ -53,6 +55,11 @@ export default function ChatInput({
     useSpeechToText();
 
   const message = [typed, transcript].filter(Boolean).join(" ").trimStart();
+  const showTypingPlaceholder = !listening && !isLoading && !message.trim();
+  const typingPlaceholder = useTypingPlaceholder(
+    IDLE_PLACEHOLDER,
+    showTypingPlaceholder
+  );
   const selectedModel =
     GEMINI_MODELS.find((option) => option.id === model) ?? GEMINI_MODELS[0];
 
@@ -165,21 +172,32 @@ export default function ChatInput({
     <>
       <div className="chat-composer-box">
         <div className="chat-composer-main">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            disabled={isLoading}
-            onChange={(e) => {
-              if (listening) return;
-              setTyped(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              listening ? "Listening… speak now" : "Describe an app to build…"
-            }
-            rows={1}
-            className="min-h-[44px] max-h-[180px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-[0.97rem] leading-6 text-[var(--fg)] placeholder:text-[var(--fg-muted)] shadow-none outline-none focus:ring-0"
-          />
+          <div className="chat-composer-field">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              disabled={isLoading}
+              onChange={(e) => {
+                if (listening) return;
+                setTyped(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder=""
+              rows={1}
+              aria-label={
+                listening ? "Listening… speak now" : IDLE_PLACEHOLDER
+              }
+              className="min-h-[44px] max-h-[180px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-[0.97rem] leading-6 text-[var(--fg)] placeholder:text-[var(--fg-muted)] shadow-none outline-none focus:ring-0"
+            />
+            {!message ? (
+              <span className="chat-composer-placeholder" aria-hidden>
+                {listening ? "Listening… speak now" : typingPlaceholder}
+                {showTypingPlaceholder ? (
+                  <span className="chat-composer-caret" />
+                ) : null}
+              </span>
+            ) : null}
+          </div>
 
           <div className="chat-composer-actions">
             {supported && (
