@@ -15,6 +15,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Lovable",
   description: "Build apps by chatting with AI",
+  applicationName: "Lovable",
 };
 
 export default function RootLayout({
