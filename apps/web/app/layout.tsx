@@ -16,10 +16,6 @@ export const metadata: Metadata = {
   title: "Lovable",
   description: "Build apps by chatting with AI",
   applicationName: "Lovable",
-  icons: {
-    icon: "/icon",
-    apple: "/apple-icon",
-  },
 };
 
 export default function RootLayout({
